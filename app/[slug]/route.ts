@@ -10,6 +10,29 @@ type RedirectEntry = {
   permanent?: boolean;
 };
 
+// A store item can be entered either as a plain URL string, e.g.
+//   "whatsapp": "https://wa.me/94778667795"
+// or as an object with extra options, e.g.
+//   "whatsapp": { "destination": "https://wa.me/94778667795", "permanent": true }
+// Accept both so however it's typed into the store editor, it works.
+function parseEntry(value: unknown): RedirectEntry | undefined {
+  if (typeof value === "string") {
+    return { destination: value };
+  }
+  if (
+    value &&
+    typeof value === "object" &&
+    typeof (value as Record<string, unknown>).destination === "string"
+  ) {
+    const record = value as Record<string, unknown>;
+    return {
+      destination: record.destination as string,
+      permanent: Boolean(record.permanent),
+    };
+  }
+  return undefined;
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
@@ -18,7 +41,7 @@ export async function GET(
 
   let entry: RedirectEntry | undefined;
   try {
-    entry = await get<RedirectEntry>(slug);
+    entry = parseEntry(await get(slug));
   } catch (error) {
     // Global Config not configured/reachable — fail safe, don't 500 on a scan.
     console.error(`Global Config lookup failed for slug "${slug}":`, error);
