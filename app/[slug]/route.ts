@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { get } from "@vercel/edge-config";
+import { get } from "@vercel/global-config";
 
-// Where to send scanners if a slug isn't configured (or Edge Config
+// Where to send scanners if a slug isn't configured (or Global Config
 // is unreachable). Never dead-end a scanned QR code.
 const FALLBACK_URL = "https://instafixd.com";
 
@@ -20,8 +20,8 @@ export async function GET(
   try {
     entry = await get<RedirectEntry>(slug);
   } catch (error) {
-    // Edge Config not configured/reachable — fail safe, don't 500 on a scan.
-    console.error(`Edge Config lookup failed for slug "${slug}":`, error);
+    // Global Config not configured/reachable — fail safe, don't 500 on a scan.
+    console.error(`Global Config lookup failed for slug "${slug}":`, error);
   }
 
   const destination = entry?.destination ?? FALLBACK_URL;
